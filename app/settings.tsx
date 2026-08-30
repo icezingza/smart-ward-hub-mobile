@@ -1,0 +1,15 @@
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScreenContainer } from "@/components/screen-container";
+import { useColors } from "@/hooks/use-colors";
+import { useWard } from "@/lib/ward-store";
+
+export default function SettingsScreen() {
+  const router = useRouter();
+  const colors = useColors();
+  const { ward, updateWardName, resetDemoData } = useWard();
+  const [name, setName] = useState(ward.name);
+  return <ScreenContainer className="px-5"><View style={styles.content}><View style={styles.header}><View><Text style={[styles.eyebrow, { color: colors.muted }]}>PREFERENCES</Text><Text style={[styles.title, { color: colors.foreground }]}>Settings</Text></View><Pressable onPress={() => router.back()}><Text style={[styles.done, { color: colors.primary }]}>Done</Text></Pressable></View><Text style={[styles.label, { color: colors.foreground }]}>Ward label</Text><TextInput value={name} onChangeText={setName} onBlur={() => updateWardName(name)} placeholder="Ward name" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border }]} /><Text style={[styles.helper, { color: colors.muted }]}>This label is stored on this device for demo workflows.</Text><View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.infoTitle, { color: colors.foreground }]}>Local demo mode</Text><Text style={[styles.helper, { color: colors.muted }]}>No live device, patient identity, or hospital system is connected. Treat all records as non-clinical sample data.</Text></View><Pressable onPress={() => Alert.alert("Reset demo data?", "This will restore the sample ward state on this device.", [{ text: "Cancel", style: "cancel" }, { text: "Reset", style: "destructive", onPress: resetDemoData }])} style={({ pressed }) => [styles.reset, { borderColor: colors.error }, pressed && { opacity: 0.7 }]}><Text style={[styles.resetText, { color: colors.error }]}>Reset demo data</Text></Pressable></View></ScreenContainer>;
+}
+const styles = StyleSheet.create({ content: { paddingTop: 18 }, header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 34 }, eyebrow: { fontSize: 11, fontWeight: "800", letterSpacing: 1.5 }, title: { fontSize: 28, fontWeight: "800", marginTop: 5 }, done: { fontSize: 15, fontWeight: "800", paddingTop: 12 }, label: { fontSize: 14, fontWeight: "800", marginBottom: 9 }, input: { borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15 }, helper: { fontSize: 12, lineHeight: 18, marginTop: 8 }, infoCard: { borderWidth: 1, borderRadius: 16, padding: 16, marginTop: 28 }, infoTitle: { fontSize: 15, fontWeight: "800" }, reset: { borderWidth: 1, borderRadius: 13, alignItems: "center", paddingVertical: 14, marginTop: 28 }, resetText: { fontSize: 14, fontWeight: "800" } });
