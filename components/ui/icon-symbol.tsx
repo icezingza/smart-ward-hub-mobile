@@ -10,6 +10,7 @@ const MAPPING = {
   "clock.fill": "history",
   "gearshape.fill": "settings",
   "chevron.right": "chevron-right",
+  "chevron.left": "chevron-left",
   "checkmark.circle.fill": "check-circle",
   "exclamationmark.triangle.fill": "warning",
   "arrow.clockwise": "sync",

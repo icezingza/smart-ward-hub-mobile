@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useWard } from "@/lib/ward-store";
@@ -7,9 +8,43 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export default function PatientsScreen() {
   const colors = useColors();
+  const router = useRouter();
   const { patients } = useWard();
   const [query, setQuery] = useState("");
-  const visible = useMemo(() => patients.filter((p) => `${p.bed} ${p.displayCode}`.toLowerCase().includes(query.toLowerCase())), [patients, query]);
-  return <ScreenContainer className="px-5"><ScrollView contentContainerStyle={styles.content}><Text style={[styles.eyebrow, { color: colors.muted }]}>WARD CENSUS</Text><Text style={[styles.title, { color: colors.foreground }]}>Patients</Text><Text style={[styles.subtitle, { color: colors.muted }]}>Use bed codes instead of full identity in demo mode.</Text><View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="magnifyingglass" size={19} color={colors.muted} /><TextInput value={query} onChangeText={setQuery} placeholder="Search bed or patient code" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground }]} returnKeyType="search" /></View><View style={styles.list}>{visible.map((patient) => { const tone = patient.riskLevel === "High" ? colors.error : patient.riskLevel === "Medium" ? colors.warning : colors.success; return <View key={patient.id} style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.row}><View style={[styles.bed, { backgroundColor: `${tone}18` }]}><Text style={[styles.bedText, { color: tone }]}>{patient.bed}</Text></View><View style={styles.copy}><Text style={[styles.name, { color: colors.foreground }]}>{patient.displayCode}</Text><Text style={[styles.reading, { color: colors.muted }]}>{patient.latestReading}</Text></View><View style={[styles.risk, { backgroundColor: `${tone}18` }]}><Text style={[styles.riskText, { color: tone }]}>{patient.riskLevel}</Text></View></View>{patient.note ? <Text style={[styles.note, { color: colors.muted }]}>Note: {patient.note}</Text> : null}</View>})}</View></ScrollView></ScreenContainer>;
+  const visible = useMemo(
+    () => patients.filter((p) => `${p.bed} ${p.displayCode}`.toLowerCase().includes(query.toLowerCase())),
+    [patients, query],
+  );
+
+  return (
+    <ScreenContainer className="px-5">
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.eyebrow, { color: colors.muted }]}>WARD CENSUS</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>Patients</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Use bed codes instead of full identity in demo mode.</Text>
+        <View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <IconSymbol name="magnifyingglass" size={19} color={colors.muted} />
+          <TextInput value={query} onChangeText={setQuery} placeholder="Search bed or patient code" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground }]} returnKeyType="search" accessibilityLabel="Search patients" />
+        </View>
+        <View style={styles.list}>
+          {visible.map((patient) => {
+            const tone = patient.riskLevel === "High" ? colors.error : patient.riskLevel === "Medium" ? colors.warning : colors.success;
+            return (
+              <Pressable key={patient.id} onPress={() => router.push(`/patient/${patient.id}` as any)} style={({ pressed }) => [styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={`Open ${patient.displayCode}`}>
+                <View style={styles.row}>
+                  <View style={[styles.bed, { backgroundColor: `${tone}18` }]}><Text style={[styles.bedText, { color: tone }]}>{patient.bed}</Text></View>
+                  <View style={styles.copy}><Text style={[styles.name, { color: colors.foreground }]}>{patient.displayCode}</Text><Text style={[styles.reading, { color: colors.muted }]}>{patient.latestReading}</Text></View>
+                  <View style={styles.trailing}><View style={[styles.risk, { backgroundColor: `${tone}18` }]}><Text style={[styles.riskText, { color: tone }]}>{patient.riskLevel}</Text></View><IconSymbol name="chevron.right" size={18} color={colors.muted} /></View>
+                </View>
+                {patient.note ? <Text style={[styles.note, { color: colors.muted }]}>Note: {patient.note}</Text> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+        {!visible.length && <View style={styles.empty}><Text style={[styles.emptyTitle, { color: colors.foreground }]}>No patients found</Text><Text style={[styles.emptyText, { color: colors.muted }]}>Try a different bed or display code.</Text></View>}
+      </ScrollView>
+    </ScreenContainer>
+  );
 }
-const styles = StyleSheet.create({ content: { paddingTop: 18, paddingBottom: 28 }, eyebrow: { fontSize: 11, fontWeight: "800", letterSpacing: 1.5 }, title: { fontSize: 28, fontWeight: "800", marginTop: 5 }, subtitle: { fontSize: 14, marginTop: 6 }, search: { borderWidth: 1, borderRadius: 14, flexDirection: "row", alignItems: "center", paddingHorizontal: 13, marginTop: 20 }, input: { flex: 1, paddingVertical: 13, paddingHorizontal: 8, fontSize: 14 }, list: { gap: 11, marginTop: 16 }, card: { borderRadius: 16, borderWidth: 1, padding: 15 }, row: { flexDirection: "row", alignItems: "center" }, bed: { width: 50, height: 50, borderRadius: 14, alignItems: "center", justifyContent: "center" }, bedText: { fontSize: 15, fontWeight: "900" }, copy: { flex: 1, marginLeft: 12 }, name: { fontSize: 15, fontWeight: "800" }, reading: { fontSize: 12, marginTop: 5 }, risk: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 9 }, riskText: { fontSize: 11, fontWeight: "800" }, note: { fontSize: 12, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#D9E2EC" } });
+
+const styles = StyleSheet.create({ content: { paddingTop: 18, paddingBottom: 28 }, eyebrow: { fontSize: 11, fontWeight: "800", letterSpacing: 1.5 }, title: { fontSize: 28, fontWeight: "800", marginTop: 5 }, subtitle: { fontSize: 14, marginTop: 6 }, search: { borderWidth: 1, borderRadius: 14, flexDirection: "row", alignItems: "center", paddingHorizontal: 13, marginTop: 20 }, input: { flex: 1, paddingVertical: 13, paddingHorizontal: 8, fontSize: 14 }, list: { gap: 11, marginTop: 16 }, card: { borderRadius: 16, borderWidth: 1, padding: 15 }, row: { flexDirection: "row", alignItems: "center" }, bed: { width: 50, height: 50, borderRadius: 14, alignItems: "center", justifyContent: "center" }, bedText: { fontSize: 15, fontWeight: "900" }, copy: { flex: 1, marginLeft: 12 }, name: { fontSize: 15, fontWeight: "800" }, reading: { fontSize: 12, marginTop: 5 }, trailing: { alignItems: "flex-end", gap: 8 }, risk: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 9 }, riskText: { fontSize: 11, fontWeight: "800" }, note: { fontSize: 12, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#D9E2EC" }, empty: { alignItems: "center", paddingTop: 55 }, emptyTitle: { fontSize: 16, fontWeight: "800" }, emptyText: { fontSize: 13, marginTop: 6 }, pressed: { opacity: 0.72, transform: [{ scale: 0.985 }] } });
